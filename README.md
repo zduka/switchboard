@@ -7,4 +7,19 @@ A very simple switchboard for little kids made from scrap parts for xmas. Contai
 - get & test a power bank
 
 
+## ATMega324pa
 
+- [https://www.engbedded.com/fusecalc/] for fuses calculator
+- needs external oscillator to work properly
+- uses avrdude & usbtiny to program
+- make sure the -D is not passed to avrdude by specifying own upload command
+
+## DFPlayer
+
+- [https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299] 
+- won't register as working unless there is some mp3 to play
+
+## Devel Server
+
+- picocom -b 115200 /dev/ttyAMA0
+- C-a C-q to exit

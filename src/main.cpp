@@ -1,5 +1,4 @@
-#include <Adafruit_WS2801.h>
-#include <SoftwareSerial.h>
+#include <Adafruit_NeoPixel.h>
 #include <DFRobotDFPlayerMini.h>
 
 /*         PB0      PA0 
@@ -15,10 +14,10 @@
            GND     AVCC
            XTAL2    PC7
            XTAL1    PC6
-     (RXD) PD0      PC5
-     (TXD) PD1      PC4
-           PD2      PC3
-           PD3      PC2
+     (RX0) PD0      PC5
+     (TX0) PD1      PC4
+     (RX1) PD2      PC3
+     (RX2) PD3      PC2
            PD4      PC1
            PD5      PC0
            PD6      PD7
@@ -41,21 +40,44 @@
 
 */
 
-#define LED_CLK 4
-#define LED_DATA 3
-#define BTN 0
-#define NUM_LEDS 9
+#define LED_PIN 14
 
-#define DEBOUNCE_THRESHOLD 2
 
-#define MODE_RED 0
-#define MODE_GREEN 1
-#define MODE_BLUE 2
-#define MODE_PINK 3
-#define MODE_WARM_WHITE 4
-#define MODE_RAINBOW 5
-#define MODE_RAINBOW_CYCLE 6
-#define MODE_OFF 7
+DFRobotDFPlayerMini player;
+Adafruit_NeoPixel leds(4, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+    leds.begin();
+    leds.show();
+
+    Serial.begin(115200);
+    Serial1.begin(9600);
+    pinMode(2, OUTPUT);
+    Serial.println();
+    Serial.println(F("OH HAI!"));
+    if (!player.begin(Serial1)) {  //Use softwareSerial to communicate with mp3.
+        Serial.println(F("Failed to initialize DFPlayer"));
+        digitalWrite(2, HIGH);   
+        if (!player.available()) {
+            Serial.println(F("Player not available"));
+        }
+        leds.setPixelColor(0, 255, 0, 0);
+        leds.show();
+        while(true);
+    } else {
+        Serial.println(F("DFPLayer initialized"));
+        digitalWrite(2, LOW);
+        leds.setPixelColor(0, 0, 8, 0);
+        leds.show();
+    }
+}
+
+void loop() {
+
+}
+
+#ifdef foo
+
 
 Adafruit_WS2801 leds = Adafruit_WS2801(NUM_LEDS, LED_DATA, LED_CLK);
 uint8_t mode = MODE_OFF;
@@ -154,3 +176,4 @@ void loop() {
   }
   */
 }
+#endif
