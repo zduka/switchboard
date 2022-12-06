@@ -1,26 +1,26 @@
 #include <Adafruit_NeoPixel.h>
 #include <DFRobotDFPlayerMini.h>
 
-/*         PB0      PA0 
-           PB1      PA1
-           PB2      PA2
-           PB3      PA3
-           PB4      PA4
-    (MOSI) PB5      PA5
-    (MISO) PB6      PA6
-     (SCK) PB7      PA7
-           RESET   AREF
-           VCC      GND
-           GND     AVCC
-           XTAL2    PC7
-           XTAL1    PC6
-     (RX0) PD0      PC5
-     (TX0) PD1      PC4
-     (RX1) PD2      PC3
-     (RX2) PD3      PC2
-           PD4      PC1
-           PD5      PC0
-           PD6      PD7
+/*   (SND_SEL) PB0      PA0 --
+     (LED_SEL) PB1      PA1 --
+     (VIB_SEL) PB2      PA2 --
+               PB3      PA3 --
+               PB4      PA4 --
+        (MOSI) PB5      PA5 --
+        (MISO) PB6      PA6 --
+         (SCK) PB7      PA7 --
+               RESET   AREF
+               VCC      GND
+               GND     AVCC
+               XTAL2    PC7
+               XTAL1    PC6 --
+         (RX0) PD0      PC5 --
+         (TX0) PD1      PC4 --
+         (RX1) PD2      PC3 --
+         (RX2) PD3      PC2 --
+               PD4      PC1 --
+         (VIB) PD5      PC0 --
+         (LED) PD6      PD7 --
 
     - 16mhz oscillator needs to be between XTAL2 and XTAL1, with 22pF caps to GND
     - avcc is connected to gnd
@@ -40,15 +40,81 @@
 
 */
 
+#define SND_SEL 0
+#define LED_SEL 1
+#define VIB_SEL 2
+
+#define VIB_PIN 13
 #define LED_PIN 14
 
 
 DFRobotDFPlayerMini player;
 Adafruit_NeoPixel leds(4, LED_PIN, NEO_GRB + NEO_KHZ800);
 
+uint8_t sound = 0xff;
+uint8_t light = 0xff;
+uint8_t motor = 0xff;
+
+/** Called every 10ms, updates the effects in progress for lights and vibrating motor.
+ */
+void tick() {
+
+}
+
+uint8_t getSelection() {
+    // 0-7 from the top of the chip
+    for (uint8_t i = 24; i < 32; ++i)
+        if (digitalRead(i) == LOW)
+            return i - 24;
+    // 8-15 from the bottom of the chip
+    for (uint8_t i = 15; i < 23; ++i)
+        if (digitalRead(i) == LOW)
+            return i - 7;
+    return 0xff;
+}
+
+bool checkEffectUpdate(uint8_t & effect) {
+    tick();
+    delay(10);
+    uint8_t v = getSelection();
+    if (v == effect) {
+        return false;
+    } else {
+        effect = v;
+        return true;
+    }
+}
+
+void updateSound() {
+    if (sound != 0xff)
+        player.playFolder(1, sound);
+}
+
+void updateLight() {
+
+}
+
+void updateMotor() {
+
+}
+
+
 void setup() {
+    for (uint8_t i = 24; i < 32; ++i)
+        pinMode(i, INPUT_PULLUP);
+    for (uint8_t i = 15; i < 23; ++i)
+        pinMode(i, INPUT_PULLUP);
+    pinMode(SND_SEL, OUTPUT);
+    pinMode(LED_SEL, OUTPUT);
+    pinMode(VIB_SEL, OUTPUT);
+    digitalWrite(SND_SEL, HIGH);
+    digitalWrite(LED_SEL, HIGH);
+    digitalWrite(VIB_SEL, HIGH);
+    
     leds.begin();
     leds.show();
+    pinMode(VIB_PIN, OUTPUT);
+    analogWrite(VIB_PIN, 255);
 
     Serial.begin(115200);
     Serial1.begin(9600);
@@ -66,6 +132,8 @@ void setup() {
         while(true);
     } else {
         Serial.println(F("DFPLayer initialized"));
+        player.disableLoopAll();
+        player.disableLoop();
         digitalWrite(2, LOW);
         leds.setPixelColor(0, 0, 8, 0);
         leds.show();
@@ -73,7 +141,18 @@ void setup() {
 }
 
 void loop() {
-
+    digitalWrite(SND_SEL, LOW);
+    if (checkEffectUpdate(sound)) 
+        updateSound();
+    digitalWrite(SND_SEL, HIGH);
+    digitalWrite(LED_SEL, LOW);
+    if (checkEffectUpdate(light))
+        updateLight();
+    digitalWrite(LED_SEL, HIGH);
+    digitalWrite(VIB_SEL, LOW);
+    if (checkEffectUpdate(motor))
+        updateMotor();
+    digitalWrite(VIB_SEL, HIGH);
 }
 
 #ifdef foo
