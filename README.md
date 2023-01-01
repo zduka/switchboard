@@ -12,7 +12,14 @@ Different holes vibrate the motor with different strength and different duration
 
 ## Lights
 
-- red, green, blue, white, violet (4)
+- red, green, blue, white (4)
+- red, green, blue, white breathing (4)
+- red, green, blue, white 
+- yellow construction siren light
+- red alternating
+- blue alternating
+- blue - red alternating
+ 
 
 
 

@@ -54,10 +54,107 @@ Adafruit_NeoPixel leds(4, LED_PIN, NEO_GRB + NEO_KHZ800);
 uint8_t sound = 0xff;
 uint8_t light = 0xff;
 uint8_t motor = 0xff;
+uint8_t tickCnt = 0;
+uint16_t motorTimeout = 0;
+uint16_t lightTimeout = 0;
+
+void setStripLeft(uint8_t r, uint8_t g, uint8_t b) {
+    leds.setPixelColor(2, r, g, b);
+    leds.setPixelColor(3, r, g, b);
+}
+
+void setStripRight(uint8_t r, uint8_t g, uint8_t b) {
+    leds.setPixelColor(0, r, g, b);
+    leds.setPixelColor(1, r, g, b);
+}
+
+void setStrip(uint8_t r, uint8_t g, uint8_t b) {
+    leds.setPixelColor(0, r, g, b);
+    leds.setPixelColor(1, r, g, b);
+    leds.setPixelColor(2, r, g, b);
+    leds.setPixelColor(3, r, g, b);
+}
+
 
 /** Called every 10ms, updates the effects in progress for lights and vibrating motor.
  */
 void tick() {
+    if (motorTimeout > 0) {
+        if (--motorTimeout == 0)
+            analogWrite(VIB_PIN, 0);
+    }
+    if (lightTimeout > 0) {
+        if (--lightTimeout == 0) {
+            // turn leds off
+            leds.clear();
+            if (light == 15) // go for kaboom
+                player.playFolder(1, 16);
+        } else {
+            switch (light) {
+                case 8: // yellow flashes
+                    if ((lightTimeout / 50) % 2)
+                        setStrip(0, 0, 0); 
+                    else 
+                        setStrip(255, 255, 0); 
+                    break;
+                case 9: // red flashes
+                    if ((lightTimeout / 50) % 2)
+                        setStrip(0, 0, 0); 
+                    else 
+                        setStrip(255, 0, 0); 
+                    break;
+                case 10: // blue flashes
+                    if ((lightTimeout / 50) % 2)
+                        setStrip(0, 0, 0); 
+                    else 
+                        setStrip(0, 0, 255); 
+                    break;
+                case 11: // yellow alternating
+                    if ((lightTimeout / 50) % 2) {
+                        setStripLeft(0, 0, 0); 
+                        setStripRight(255, 255, 0); 
+                    } else { 
+                        setStripRight(0, 0, 0); 
+                        setStripLeft(255, 255, 0); 
+                    }
+                    break;
+                case 12: // red alternating
+                    if ((lightTimeout / 50) % 2) {
+                        setStripLeft(0, 0, 0); 
+                        setStripRight(255, 0, 0); 
+                    } else { 
+                        setStripRight(0, 0, 0); 
+                        setStripLeft(255, 0, 0); 
+                    }
+                    break;
+                case 13: // blue alternating
+                    if ((lightTimeout / 50) % 2) {
+                        setStripLeft(0, 0, 0); 
+                        setStripRight(0, 0, 255); 
+                    } else { 
+                        setStripRight(0, 0, 0); 
+                        setStripLeft(0, 0, 255); 
+                    }
+                    break;
+                case 14: // red / blue alternating
+                    if ((lightTimeout / 30) % 2) {
+                        setStripLeft(0, 0, 0); 
+                        setStripRight(0, 0, 255); 
+                    } else { 
+                        setStripRight(0, 0, 0); 
+                        setStripLeft(255, 0, 0); 
+                    }
+                    break;
+                case 15: { // countdown and kaboom
+                    uint8_t id = lightTimeout / 100;
+                    leds.setPixelColor(id, lightTimeout % 100, 0, 0);   
+                    break;
+                }
+            }
+        }
+        leds.show();            
+    }
+
 
 }
 
@@ -91,11 +188,55 @@ void updateSound() {
 }
 
 void updateLight() {
-
+    Serial.print("Light value:");
+    Serial.println(light);
+    switch (light) {
+        case 0:
+            setStrip(0, 0, 0);
+            break;
+        case 1:
+            setStrip(255, 0, 0);
+            break;
+        case 2:
+            setStrip(0, 255, 0);
+            break;
+        case 3: 
+            setStrip(0, 0, 255); 
+            break;
+        case 4: 
+            setStrip(255, 0, 255); 
+            break;
+        case 5: 
+            setStrip(0, 255, 255); 
+            break;
+        case 6: 
+            setStrip(255, 255, 0);
+            break;
+        case 7:
+            setStrip(255, 255, 255);
+            break;
+        case 15:
+            setStrip(100, 0, 0);
+            lightTimeout = 400; // 4 secconds till detonation
+            return;
+        default: // effects
+            break; 
+    }
+    lightTimeout = 60 * 100; // 60 seconds
 }
 
 void updateMotor() {
-
+    Serial.print("Motor value:");
+    Serial.println(motor);
+    if (motor == 0xff) {
+        analogWrite(VIB_PIN, 0);
+    } else {
+        // TODO this might need something more
+        analogWrite(VIB_PIN, 128);
+        //analogWrite(VIB_PIN, motor * 16);
+        //analogWrite(VIB_PIN, 128);
+        motorTimeout = motor * 10; // max 1.5 seconds
+    }
 }
 
 
@@ -104,55 +245,66 @@ void setup() {
         pinMode(i, INPUT_PULLUP);
     for (uint8_t i = 15; i < 23; ++i)
         pinMode(i, INPUT_PULLUP);
-    pinMode(SND_SEL, OUTPUT);
-    pinMode(LED_SEL, OUTPUT);
-    pinMode(VIB_SEL, OUTPUT);
-    digitalWrite(SND_SEL, HIGH);
-    digitalWrite(LED_SEL, HIGH);
-    digitalWrite(VIB_SEL, HIGH);
+    pinMode(SND_SEL, INPUT);
+    pinMode(LED_SEL, INPUT);
+    pinMode(VIB_SEL, INPUT);
+    //digitalWrite(SND_SEL, HIGH);
+    //digitalWrite(LED_SEL, HIGH);
+    //digitalWrite(VIB_SEL, HIGH);
     
     leds.begin();
+    leds.setPixelColor(3, 0, 64, 0);
     leds.show();
     pinMode(VIB_PIN, OUTPUT);
-    analogWrite(VIB_PIN, 255);
+    analogWrite(VIB_PIN, 0);
 
     Serial.begin(115200);
     Serial1.begin(9600);
-    pinMode(2, OUTPUT);
+    delay(250);
+    leds.setPixelColor(2, 0, 128, 0);
+    leds.show();
     Serial.println();
     Serial.println(F("OH HAI!"));
+    delay(250);
+    leds.setPixelColor(1, 0, 196, 0);
+    leds.show();
+    delay(250);
     if (!player.begin(Serial1)) {  //Use softwareSerial to communicate with mp3.
         Serial.println(F("Failed to initialize DFPlayer"));
-        digitalWrite(2, HIGH);   
         if (!player.available()) {
             Serial.println(F("Player not available"));
         }
         leds.setPixelColor(0, 255, 0, 0);
         leds.show();
-        while(true);
     } else {
         Serial.println(F("DFPLayer initialized"));
         player.disableLoopAll();
         player.disableLoop();
-        digitalWrite(2, LOW);
-        leds.setPixelColor(0, 0, 8, 0);
+        player.volume(1);
+        leds.setPixelColor(0, 0, 255, 0);
         leds.show();
     }
+    lightTimeout = 100; // 1 second;
 }
 
 void loop() {
+    pinMode(SND_SEL, OUTPUT);
     digitalWrite(SND_SEL, LOW);
     if (checkEffectUpdate(sound)) 
         updateSound();
-    digitalWrite(SND_SEL, HIGH);
+    pinMode(SND_SEL, INPUT);
+    
+    pinMode(LED_SEL, OUTPUT);
     digitalWrite(LED_SEL, LOW);
     if (checkEffectUpdate(light))
         updateLight();
-    digitalWrite(LED_SEL, HIGH);
+    pinMode(LED_SEL, INPUT);
+    
+    pinMode(VIB_SEL, OUTPUT);
     digitalWrite(VIB_SEL, LOW);
     if (checkEffectUpdate(motor))
         updateMotor();
-    digitalWrite(VIB_SEL, HIGH);
+    pinMode(VIB_SEL, INPUT);
 }
 
 #ifdef foo
