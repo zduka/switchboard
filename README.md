@@ -1,33 +1,11 @@
 # Switchboard 
 
-A very simple switchboard for little kids made from scrap parts for xmas. Contains a DFPlayer mini with a speaker, a vibration motor, and a Neopixel LED as outputs. Each is connected to a banana connector wire that can be plugged in into a 3x3 switchboard. Depending on where it's plugged, different stuff happens. Furthermore, consists of 2 switches and 2 USB-A sockets for adding usb-powered peripherals and an internal power bank. Uses ATmega324p at its heart. 
+A very simple switchboard for little kids made from scrap parts for xmas. Contains a DFplayer mini with a speaker, a vibration motor, and a Neopixel LED as outputs. Each is connected to a banana connector wire that can be plugged in into a 3x3 switchboard. Depending on where it's plugged, different stuff happens. Uses ATmega324p at its heart and lots of glue. 
 
-## Sounds
+Also 2 extra switches for USB power kids can plug their devices to (such as lights & LEGO motors). 5000mAh power bank to power the whole thing. 
 
-Sounds from https://www.zapsplat.com/. Each option selects a specific sound and plays it once. 
-
-## Motor
-
-Different holes vibrate the motor with different strength and different duration. 
-
-## Lights
-
-- red, green, blue, white (4)
-- red, green, blue, white breathing (4)
-- red, green, blue, white 
-- yellow construction siren light
-- red alternating
-- blue alternating
-- blue - red alternating
- 
-
-
-
-
-
-# TODO 
-
-
+![front](front.jpg)
+![back](back.jpg)
 
 ## ATMega324pa
 
